@@ -1,5 +1,5 @@
 # TouchDebugTool
-On 7th generation iPod nanos, a debug Bluetooth service is available for sending raw touchscreen events.
+On 7th generation iPod nanos, a debug Bluetooth service is available for sending raw events of some sort. This leverages IOBluetooth to serve an RFCOMM channel and communicate with it.
 
 ## Enabling
 1. Plug in your iPod, and mount its volume.
