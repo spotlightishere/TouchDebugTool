@@ -73,6 +73,9 @@ func registerService() {
 }
 
 class TouchDebugService {
+    let protocolHandler = TouchDebugProtocol()
+    var rfcommChannel: IOBluetoothRFCOMMChannel?
+
     /// Begins watching for Bluetooth devices to connect.
     func beginWatching() {
         IOBluetoothDevice.register(forConnectNotifications: self, selector: #selector(connected(notification:device:)))
@@ -99,11 +102,17 @@ class TouchDebugService {
         var channelId: BluetoothRFCOMMChannelID = 0
         let channelStatus = serviceRecord.getRFCOMMChannelID(&channelId)
         guard channelStatus == kIOReturnSuccess else {
-            serviceLogger.error("Connected device had no RFCOMM channel allocated!")
+            serviceLogger.error("Failed to determine RFCOMM channel ID: \(channelStatus, privacy: .public)")
             return
         }
 
         serviceLogger.debug("Allocated RFCOMM channel is \(channelId, privacy: .public)")
+
+        let openStatus = device.openRFCOMMChannelAsync(&rfcommChannel, withChannelID: channelId, delegate: protocolHandler)
+        guard openStatus == kIOReturnSuccess else {
+            serviceLogger.error("Failed to open RFCOMM channel: \(openStatus, privacy: .public)")
+            return
+        }
 
         // We'll keep track of this device. Register for disconnect notifications.
         device.register(forDisconnectNotification: self, selector: #selector(disconnected(notification:device:)))
@@ -114,5 +123,15 @@ class TouchDebugService {
 
         print("Device disconnected: \(nameOrAddress)")
         notification.unregister()
+    }
+
+    func write(_ data: Data) {
+        guard let rfcommChannel else {
+            print("Cannot write data when channel is not open!")
+            return
+        }
+
+        var lol = data
+        rfcommChannel.writeSync(&lol, length: UInt16(lol.count))
     }
 }
