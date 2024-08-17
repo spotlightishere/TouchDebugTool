@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    let touchDebugService = TouchDebugService()
+
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -16,6 +18,10 @@ struct ContentView: View {
             Text("Hello, world!")
         }
         .padding()
+        .onAppear {
+            registerService()
+            touchDebugService.beginWatching()
+        }
     }
 }
 
